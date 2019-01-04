@@ -3,7 +3,6 @@ package figlet4go
 import (
 	"errors"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -35,20 +34,20 @@ func newFontManager() *fontManager {
 
 // walk through the path, load all the *.flf font file
 func (this *fontManager) loadFont(fontPath string) error {
+	files, err := ioutil.ReadDir(fontPath)
+	if err != nil {
+		return err
+	}
 
-	return filepath.Walk(fontPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	for _, info := range files {
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".flf") {
+			fontName := strings.TrimSuffix(info.Name(), ".flf")
+			fullpath := filepath.Join(fontPath, info.Name())
+			this.fontList[fontName] = fullpath
 		}
+	}
 
-		if info.IsDir() || !strings.HasSuffix(info.Name(), ".flf") {
-			return nil
-		}
-
-		fontName := strings.TrimSuffix(info.Name(), ".flf")
-		this.fontList[fontName] = path
-		return nil
-	})
+	return nil
 }
 
 func (this *fontManager) loadBuildInFont() error {
@@ -118,8 +117,7 @@ func (this *fontManager) getFont(fontName string) (*font, error) {
 	if !ok {
 		err := this.loadDiskFont(fontName)
 		if err != nil {
-			font, _ := this.fontLib["default"]
-			return font, nil
+			return nil, err
 		}
 	}
 	font, _ = this.fontLib[fontName]

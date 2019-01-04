@@ -68,7 +68,10 @@ func (this *AsciiRender) convertChar(font *font, char rune) ([]string, error) {
 
 func (this *AsciiRender) render(asciiStr string, opt *RenderOptions) (string, error) {
 
-	font, _ := this.fontMgr.getFont(opt.FontName)
+	font, err := this.fontMgr.getFont(opt.FontName)
+	if err != nil {
+		return "", err
+	}
 
 	wordlist := make([][]string, 0)
 	for _, char := range asciiStr {
